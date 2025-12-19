@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rafa Versário</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0b0c1a;
+      --panel: rgba(12, 16, 30, 0.88);
+      --accent: #e24b75;
+      --accent-2: #56d8a2;
+      --pill: #ffd166;
+      --wall: #1f2f5d;
+      --grid: rgba(255, 255, 255, 0.05);
+      --text: #e8ecf2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 20% 20%, #182038, #0b0c1a 50%), radial-gradient(circle at 80% 0%, #1c2440, #0b0c1a 55%);
+      color: var(--text);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      padding: 24px;
+    }
+    h1 {
+      margin: 0;
+      font-family: 'Press Start 2P', monospace;
+      letter-spacing: 1px;
+      color: var(--pill);
+      text-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+      font-size: clamp(18px, 3vw, 28px);
+    }
+    .wrap {
+      width: min(1100px, 100%);
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+    .badge {
+      background: linear-gradient(120deg, var(--accent), #ff7f50);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #0b0c1a;
+    }
+    .game-area {
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      border-radius: 16px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: auto 260px;
+      gap: 16px;
+    }
+    canvas {
+      background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.06), transparent 40%), #0d1326;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      image-rendering: pixelated;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 10px 30px rgba(0, 0, 0, 0.35);
+      width: 100%;
+      height: auto;
+    }
+    .panel {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .stat span:first-child {
+      color: rgba(232, 236, 242, 0.75);
+    }
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(86, 216, 162, 0.1);
+      border: 1px solid rgba(86, 216, 162, 0.2);
+      color: var(--accent-2);
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .status-tag.off {
+      background: rgba(226, 75, 117, 0.08);
+      border-color: rgba(226, 75, 117, 0.25);
+      color: var(--accent);
+    }
+    .legend {
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(232, 236, 242, 0.9);
+    }
+    button {
+      background: linear-gradient(120deg, var(--accent), #ff7f50);
+      color: #0b0c1a;
+      border: none;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      font-family: 'Space Grotesk', sans-serif;
+      text-transform: uppercase;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.28); }
+    button:active { transform: translateY(0); box-shadow: none; }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 6, 12, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease;
+      padding: 20px;
+      z-index: 10;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    .card {
+      background: #0f152c;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 24px;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 28px 60px rgba(0, 0, 0, 0.55);
+    }
+    .card img {
+      width: 140px;
+      height: 140px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 16px;
+    }
+    .card h2 {
+      margin: 0 0 8px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 16px;
+      color: var(--pill);
+    }
+    .card p { margin: 0 0 16px; color: rgba(232, 236, 242, 0.9); }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 12px;
+    }
+    @media (max-width: 900px) {
+      .game-area { grid-template-columns: 1fr; }
+      canvas { width: 100%; height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <div class="badge">presente surpresa</div>
+        <h1>Rafa Versário</h1>
+      </div>
+      <button id="reset-btn">Recomeçar</button>
+    </div>
+    <div class="game-area">
+      <canvas id="game" width="544" height="352">Seu navegador não suporta canvas.</canvas>
+      <div class="panel">
+        <div class="stat"><span>Pontos</span><span id="score">0</span></div>
+        <div class="stat"><span>Pílulas restantes</span><span id="pills-left">0</span></div>
+        <div class="stat"><span>Velocidade</span><span id="speed">0</span></div>
+        <div class="status-tag off" id="power-status">Whey desativado</div>
+        <div class="legend">
+          <div class="pill"><strong>Controles:</strong> setas ou WASD</div>
+          <div class="pill"><strong>Missão:</strong> pegue pílulas e whey para ficar forte.</div>
+          <div class="pill"><strong>Cuidado:</strong> amigos trazem bolo. Se encostar sem whey, fim de jogo.</div>
+          <div class="pill"><strong>Dica:</strong> com whey, eles fogem e você manda eles de volta para casa.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <img src="assets/cake.png" alt="Bolo" id="overlay-image">
+      <h2 id="overlay-title"></h2>
+      <p id="overlay-text"></p>
+      <button id="play-again">Jogar de novo</button>
+    </div>
+  </div>
+
+  <script>
+    const TILE = 32;
+    const mapTemplate = [
+      "#################",
+      "#...W....W......#",
+      "#.###.###.###.###",
+      "#W#.....#......W#",
+      "#.###.#.###.#.###",
+      "#.....#...#.....#",
+      "###.###.#.###.###",
+      "#.....#...#.....#",
+      "#.###.###.###.###",
+      "#...W...W...W...#",
+      "#################"
+    ];
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    canvas.width = mapTemplate[0].length * TILE;
+    canvas.height = mapTemplate.length * TILE;
+
+    const scoreEl = document.getElementById('score');
+    const pillsLeftEl = document.getElementById('pills-left');
+    const speedEl = document.getElementById('speed');
+    const powerEl = document.getElementById('power-status');
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlay-title');
+    const overlayText = document.getElementById('overlay-text');
+    const overlayImg = document.getElementById('overlay-image');
+
+    const playerSpawn = { x: 1, y: 9 };
+    const enemySpawns = [
+      { x: 15, y: 1 },
+      { x: 9, y: 3 },
+      { x: 5, y: 5 },
+      { x: 13, y: 7 },
+      { x: 1, y: 5 },
+      { x: 12, y: 7 },
+      { x: 9, y: 9 }
+    ];
+
+    const enemyDefs = [
+      { name: 'André', src: 'assets/andre.jpg' },
+      { name: 'Carol', src: 'assets/carol.jpg' },
+      { name: 'Gabriel', src: 'assets/gabriel.jpg' },
+      { name: 'Huara', src: 'assets/huara.jpg' },
+      { name: 'Ingrid', src: 'assets/ingrid.jpg' },
+      { name: 'Ju', src: 'assets/ju.jpg' },
+      { name: 'Rick', src: 'assets/rick.jpg' }
+    ];
+
+    const baseSpeed = 5.5;       // tiles per second
+    const wheyBoost = 2.5;       // speed increase with whey
+    const wheyDuration = 10;     // seconds
+    const enemyBaseSpeed = 3.0;  // base enemy speed
+    const enemyScaredSpeed = 2.2;// enemy speed while player está forte
+    const enemyStagger = 3.0;    // seconds between releases
+    const enemyRespawnDelay = 4.0;
+    const startGrace = 2.5;      // invulnerabilidade inicial
+
+    let sprites = {};
+    let map = [];
+    let player;
+    let enemies = [];
+    let pelletsLeft = 0;
+    let score = 0;
+    let strongTimer = 0;
+    let graceTimer = 0;
+    let running = false;
+    let lastTime = performance.now();
+
+    const dirs = {
+      left: { x: -1, y: 0 },
+      right: { x: 1, y: 0 },
+      up: { x: 0, y: -1 },
+      down: { x: 0, y: 1 },
+      still: { x: 0, y: 0 }
+    };
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Erro ao carregar ' + src));
+        img.src = src;
+      });
+    }
+
+    async function loadAssets() {
+      const assets = [
+        loadImage('assets/emo-rafa.jpg'),
+        loadImage('assets/pill.png'),
+        loadImage('assets/whey.png'),
+        loadImage('assets/cake.png'),
+        loadImage('assets/win.png'),
+        ...enemyDefs.map(def => loadImage(def.src))
+      ];
+      const [playerImg, pillImg, wheyImg, cakeImg, winImg, ...enemyImgs] = await Promise.all(assets);
+      sprites = {
+        player: playerImg,
+        pill: pillImg,
+        whey: wheyImg,
+        cake: cakeImg,
+        win: winImg,
+        enemies: enemyImgs
+      };
+    }
+
+    function cloneMap() {
+      return mapTemplate.map(row => row.split(''));
+    }
+
+    function countTargets(grid) {
+      let total = 0;
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[0].length; x++) {
+          const t = grid[y][x];
+          if (t === '.' || t === 'W') total++;
+        }
+      }
+      return total;
+    }
+
+    function resetGame() {
+      map = cloneMap();
+      score = 0;
+      strongTimer = 0;
+      graceTimer = startGrace;
+      running = true;
+      lastTime = performance.now();
+
+      player = {
+        x: playerSpawn.x,
+        y: playerSpawn.y,
+        dir: { ...dirs.right },
+        pending: { ...dirs.right },
+        speed: baseSpeed,
+        progress: 0
+      };
+
+      enemies = enemySpawns.map((spawn, idx) => ({
+        name: enemyDefs[idx].name,
+        x: spawn.x,
+        y: spawn.y,
+        dir: { ...dirs.still },
+        speed: enemyBaseSpeed,
+        progress: 0,
+        changeTimer: 0,
+        img: sprites.enemies[idx],
+        spawn: { ...spawn },
+        state: 'waiting',
+        timer: idx * enemyStagger
+      }));
+
+      map[playerSpawn.y][playerSpawn.x] = ' ';
+      enemies.forEach(e => { map[e.y][e.x] = ' '; });
+      pelletsLeft = countTargets(map);
+
+      overlay.classList.remove('active');
+      updateUI();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function wrapX(x) {
+      const width = map[0].length;
+      if (x < 0) return width - 1;
+      if (x >= width) return 0;
+      return x;
+    }
+
+    function wrapY(y) {
+      const height = map.length;
+      if (y < 0) return height - 1;
+      if (y >= height) return 0;
+      return y;
+    }
+
+    function isWall(x, y) {
+      const yy = wrapY(y);
+      const xx = wrapX(x);
+      return map[yy][xx] === '#';
+    }
+
+    function setDirection(dir) {
+      player.pending = dir;
+    }
+
+    function tryApplyPending() {
+      const targetX = wrapX(player.x + player.pending.x);
+      const targetY = wrapY(player.y + player.pending.y);
+      if (!isWall(targetX, targetY)) {
+        player.dir = { ...player.pending };
+      }
+    }
+
+    function handlePlayerStep() {
+      const cell = map[player.y][player.x];
+      if (cell === '.') {
+        map[player.y][player.x] = ' ';
+        pelletsLeft--;
+        score += 10;
+      } else if (cell === 'W') {
+        map[player.y][player.x] = ' ';
+        pelletsLeft--;
+        strongTimer = wheyDuration;
+        score += 50;
+      }
+    }
+
+    function validMoves(x, y) {
+      return [dirs.up, dirs.down, dirs.left, dirs.right].filter(d => !isWall(wrapX(x + d.x), wrapY(y + d.y)));
+    }
+
+    function pickEnemyDir(enemy) {
+      const moves = validMoves(enemy.x, enemy.y);
+      if (!moves.length) return dirs.still;
+      const scored = moves.map(move => {
+        const nx = wrapX(enemy.x + move.x);
+        const ny = wrapY(enemy.y + move.y);
+        const dist = Math.abs(nx - player.x) + Math.abs(ny - player.y);
+        return { move, dist };
+      });
+      const escape = strongTimer > 0;
+      scored.sort((a, b) => escape ? b.dist - a.dist : a.dist - b.dist);
+      const prefer = scored[0].move;
+      const preferChance = escape ? 0.65 : 0.55;
+      if (Math.random() < preferChance) return prefer;
+      return moves[Math.floor(Math.random() * moves.length)];
+    }
+
+    function updatePlayer(dt) {
+      tryApplyPending();
+      player.progress += player.speed * dt;
+      while (player.progress >= 1) {
+        const nx = wrapX(player.x + player.dir.x);
+        const ny = wrapY(player.y + player.dir.y);
+        if (isWall(nx, ny)) {
+          player.dir = { ...dirs.still };
+          player.progress = 0;
+          break;
+        }
+        player.x = nx;
+        player.y = ny;
+        handlePlayerStep();
+        player.progress -= 1;
+      }
+    }
+
+    function updateEnemies(dt) {
+      enemies.forEach(enemy => {
+        if (enemy.state === 'waiting') {
+          enemy.timer -= dt;
+          if (enemy.timer <= 0) {
+            enemy.state = 'active';
+            enemy.changeTimer = 0;
+            enemy.dir = pickEnemyDir(enemy);
+          }
+          return;
+        }
+        enemy.changeTimer -= dt;
+        if (enemy.changeTimer <= 0 || isWall(wrapX(enemy.x + enemy.dir.x), wrapY(enemy.y + enemy.dir.y))) {
+          enemy.dir = pickEnemyDir(enemy);
+          enemy.changeTimer = 0.4 + Math.random() * 0.6;
+        }
+        const speed = strongTimer > 0 ? enemyScaredSpeed : enemy.speed;
+        enemy.progress += speed * dt;
+        while (enemy.progress >= 1) {
+          const nx = wrapX(enemy.x + enemy.dir.x);
+          const ny = wrapY(enemy.y + enemy.dir.y);
+          if (isWall(nx, ny)) {
+            enemy.dir = pickEnemyDir(enemy);
+            enemy.progress = 0;
+            break;
+          }
+          enemy.x = nx;
+          enemy.y = ny;
+          enemy.progress -= 1;
+        }
+      });
+    }
+
+    function checkCollisions() {
+      for (const enemy of enemies) {
+        if (enemy.state !== 'active') continue;
+        if (enemy.x === player.x && enemy.y === player.y) {
+          if (strongTimer > 0) {
+            score += 25;
+            enemy.x = enemy.spawn.x;
+            enemy.y = enemy.spawn.y;
+            enemy.dir = { ...dirs.still };
+            enemy.changeTimer = 0;
+            enemy.state = 'waiting';
+            enemy.timer = enemyRespawnDelay;
+            enemy.progress = 0;
+          } else {
+            if (graceTimer <= 0) {
+              endGame(false, `${enemy.name} trouxe bolo!`);
+            }
+          }
+        }
+      }
+      if (pelletsLeft <= 0) {
+        endGame(true, 'Rafa ficou gigante!');
+      }
+    }
+
+    function endGame(win, reason) {
+      running = false;
+      draw();
+      updateUI();
+      overlayImg.src = win ? 'assets/win.png' : 'assets/cake.png';
+      overlayTitle.textContent = win ? 'Você ficou grandão!' : 'Bolo surpresa!';
+      overlayText.textContent = win ? 'Você ficou grandão e fugiu dos parabéns!' : `${reason} Feliz aniversário!`;
+      overlay.classList.add('active');
+    }
+
+    function drawGrid() {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= canvas.width; x += TILE) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= canvas.height; y += TILE) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let y = 0; y < map.length; y++) {
+        for (let x = 0; x < map[0].length; x++) {
+          const cell = map[y][x];
+          const px = x * TILE;
+          const py = y * TILE;
+          if (cell === '#') {
+            ctx.fillStyle = y % 2 === 0 ? '#18254a' : '#1a2d59';
+            ctx.fillRect(px, py, TILE, TILE);
+            ctx.fillStyle = 'rgba(255,255,255,0.06)';
+            ctx.fillRect(px + 6, py + 6, TILE - 12, TILE - 12);
+          } else if (cell === '.') {
+            const size = TILE * 0.6;
+            const offset = (TILE - size) / 2;
+            ctx.drawImage(sprites.pill, px + offset, py + offset, size, size);
+          } else if (cell === 'W') {
+            const size = TILE * 0.7;
+            const offset = (TILE - size) / 2;
+            ctx.drawImage(sprites.whey, px + offset, py + offset, size, size);
+          }
+        }
+      }
+
+      enemies.forEach(enemy => {
+        if (enemy.state === 'waiting') return;
+        const px = enemy.x * TILE;
+        const py = enemy.y * TILE;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(px + TILE / 2, py + TILE / 2, TILE / 2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(226, 75, 117, 0.35)';
+        ctx.fill();
+        ctx.drawImage(enemy.img, px + 2, py + 2, TILE - 4, TILE - 4);
+        ctx.restore();
+      });
+
+      const px = player.x * TILE;
+      const py = player.y * TILE;
+      if (strongTimer > 0) {
+        const radius = TILE / 1.1;
+        const alpha = 0.4 + 0.2 * Math.sin(performance.now() / 120);
+        ctx.fillStyle = `rgba(86, 216, 162, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(px + TILE / 2, py + TILE / 2, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.drawImage(sprites.player, px + 2, py + 2, TILE - 4, TILE - 4);
+
+      drawGrid();
+    }
+
+    function updateUI() {
+      scoreEl.textContent = score;
+      pillsLeftEl.textContent = pelletsLeft;
+      speedEl.textContent = `${player ? (player.speed).toFixed(1) : baseSpeed} tiles/s`;
+      if (strongTimer > 0) {
+        powerEl.classList.remove('off');
+        powerEl.textContent = `Whey ativo: ${strongTimer.toFixed(1)}s`;
+      } else if (graceTimer > 0) {
+        powerEl.classList.remove('off');
+        powerEl.textContent = `Início seguro: ${graceTimer.toFixed(1)}s`;
+      } else {
+        powerEl.classList.add('off');
+        powerEl.textContent = 'Whey desativado';
+      }
+    }
+
+    function loop(timestamp) {
+      const dt = Math.min(0.05, (timestamp - lastTime) / 1000);
+      lastTime = timestamp;
+      if (!running) return;
+
+      if (strongTimer > 0) {
+        strongTimer = Math.max(0, strongTimer - dt);
+        player.speed = baseSpeed + wheyBoost;
+      } else {
+        player.speed = baseSpeed;
+      }
+      if (graceTimer > 0) {
+        graceTimer = Math.max(0, graceTimer - dt);
+      }
+
+      updatePlayer(dt);
+      updateEnemies(dt);
+      checkCollisions();
+      updateUI();
+      draw();
+
+      if (running) requestAnimationFrame(loop);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      if (['arrowup', 'w'].includes(key)) { setDirection(dirs.up); e.preventDefault(); }
+      if (['arrowdown', 's'].includes(key)) { setDirection(dirs.down); e.preventDefault(); }
+      if (['arrowleft', 'a'].includes(key)) { setDirection(dirs.left); e.preventDefault(); }
+      if (['arrowright', 'd'].includes(key)) { setDirection(dirs.right); e.preventDefault(); }
+      if (!running && key === ' ') resetGame();
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', resetGame);
+    document.getElementById('play-again').addEventListener('click', resetGame);
+
+    loadAssets()
+      .then(resetGame)
+      .catch(err => {
+        overlayTitle.textContent = 'Erro ao carregar';
+        overlayText.textContent = err.message;
+        overlay.classList.add('active');
+      });
+  </script>
+</body>
+</html>
